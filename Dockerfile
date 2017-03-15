@@ -2,7 +2,7 @@ FROM singularities/hadoop:2.7
 MAINTAINER Singularities
 
 # Version
-ENV SPARK_VERSION=2.1.0
+ENV SPARK_VERSION=2.0.1
 
 # Set home
 ENV SPARK_HOME=/usr/local/spark-$SPARK_VERSION
@@ -11,9 +11,14 @@ ENV SPARK_HOME=/usr/local/spark-$SPARK_VERSION
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install \
     -yq --no-install-recommends  \
-      python python3 \
+      python python3 vim sqlite3 \
   && apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
+
+# Install GridLAB-D
+COPY gridlabd_3.2.0-2_amd64.deb /opt/util/gridlabd_3.2.0-2_amd64.deb
+RUN dpkg -i /opt/util/gridlabd_3.2.0-2_amd64.deb \
+  && rm /opt/util/gridlabd_3.2.0-2_amd64.deb
 
 # Install Spark
 RUN mkdir -p "${SPARK_HOME}" \
@@ -21,6 +26,7 @@ RUN mkdir -p "${SPARK_HOME}" \
   && export DOWNLOAD_PATH=apache/spark/spark-$SPARK_VERSION/$ARCHIVE \
   && curl -sSL https://mirrors.ocf.berkeley.edu/$DOWNLOAD_PATH | \
     tar -xz -C $SPARK_HOME --strip-components 1 \
+  && sed 's/log4j.rootCategory=INFO/log4j.rootCategory=WARN/g' $SPARK_HOME/conf/log4j.properties.template >$SPARK_HOME/conf/log4j.properties \
   && rm -rf $ARCHIVE
 COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
@@ -33,7 +39,8 @@ COPY start-spark /opt/util/bin/start-spark
 
 # Fix environment for other users
 RUN echo "export SPARK_HOME=$SPARK_HOME" >> /etc/bash.bashrc \
-  && echo 'export PATH=$PATH:$SPARK_HOME/bin'>> /etc/bash.bashrc
+  && echo 'export PATH=$PATH:$SPARK_HOME/bin'>> /etc/bash.bashrc \
+  && echo "alias ll='ls -alF'">> /etc/bash.bashrc
 
 # Add deprecated commands
 RUN echo '#!/usr/bin/env bash' > /usr/bin/master \
