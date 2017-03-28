@@ -4,6 +4,9 @@ MAINTAINER Singularities
 # Version
 ENV SPARK_VERSION=2.1.1
 
+# set up TTY
+ENV TERM=xterm-256color
+
 # Set home
 ENV SPARK_HOME=/usr/local/spark-$SPARK_VERSION
 
