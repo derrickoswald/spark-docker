@@ -40,6 +40,11 @@ EXPOSE 6066 7077 8080 8081
 # Copy start script
 COPY start-spark /opt/util/bin/start-spark
 
+# Fix Java native library path
+# avoid WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+COPY spark-defaults.conf $SPARK_HOME/conf/spark-defaults.conf
+RUN ldconfig
+
 # Fix environment for other users
 RUN echo "export SPARK_HOME=$SPARK_HOME" >> /etc/bash.bashrc \
   && echo 'export PATH=$PATH:$SPARK_HOME/bin'>> /etc/bash.bashrc \
