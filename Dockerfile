@@ -2,7 +2,7 @@ FROM singularities/hadoop:2.7
 MAINTAINER Singularities
 
 # Version
-ENV SPARK_VERSION=2.0.1
+ENV SPARK_VERSION=2.0.2
 
 # set up TTY
 ENV TERM=xterm-256color
@@ -14,7 +14,7 @@ ENV SPARK_HOME=/usr/local/spark-$SPARK_VERSION
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install \
     -yq --no-install-recommends  \
-      python python3 vim sqlite3 r-base \
+      python python3 vim sqlite3 r-base p7zip \
   && apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -26,8 +26,8 @@ RUN dpkg -i /opt/util/gridlabd_3.2.0-2_amd64.deb \
 # Install Spark
 RUN mkdir -p "${SPARK_HOME}" \
   && export ARCHIVE=spark-$SPARK_VERSION-bin-without-hadoop.tgz \
-  && export DOWNLOAD_PATH=apache/spark/spark-$SPARK_VERSION/$ARCHIVE \
-  && curl -sSL https://mirrors.ocf.berkeley.edu/$DOWNLOAD_PATH | \
+  && export DOWNLOAD_PATH=mirror/apache/dist/spark/spark-$SPARK_VERSION/$ARCHIVE \
+  && curl -sSL https://mirror.switch.ch/$DOWNLOAD_PATH | \
     tar -xz -C $SPARK_HOME --strip-components 1 \
   && sed 's/log4j.rootCategory=INFO/log4j.rootCategory=WARN/g' $SPARK_HOME/conf/log4j.properties.template >$SPARK_HOME/conf/log4j.properties \
   && rm -rf $ARCHIVE
