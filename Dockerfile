@@ -27,7 +27,7 @@ RUN dpkg -i /opt/util/gridlabd_3.2.0-2_amd64.deb \
 RUN mkdir -p "${SPARK_HOME}" \
   && export ARCHIVE=spark-$SPARK_VERSION-bin-without-hadoop.tgz \
   && export DOWNLOAD_PATH=mirror/apache/dist/spark/spark-$SPARK_VERSION/$ARCHIVE \
-  && curl -sSL https://mirror.switch.ch/$DOWNLOAD_PATH | \
+  && curl -sSL http://mirror.switch.ch/$DOWNLOAD_PATH | \
     tar -xz -C $SPARK_HOME --strip-components 1 \
   && sed 's/log4j.rootCategory=INFO/log4j.rootCategory=WARN/g' $SPARK_HOME/conf/log4j.properties.template >$SPARK_HOME/conf/log4j.properties \
   && rm -rf $ARCHIVE
