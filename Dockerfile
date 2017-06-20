@@ -25,7 +25,7 @@ RUN dpkg -i /opt/util/gridlabd_3.2.0-2_amd64.deb \
 
 # Install Spark
 RUN mkdir -p "${SPARK_HOME}" \
-  && export ARCHIVE=spark-$SPARK_VERSION-bin-without-hadoop.tgz \
+  && export ARCHIVE=spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
   && export DOWNLOAD_PATH=mirror/apache/dist/spark/spark-$SPARK_VERSION/$ARCHIVE \
   && curl -sSL http://mirror.switch.ch/$DOWNLOAD_PATH | \
     tar -xz -C $SPARK_HOME --strip-components 1 \
@@ -34,8 +34,11 @@ RUN mkdir -p "${SPARK_HOME}" \
 COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
 
+# Remove duplicate SLF4J bindings
+RUN mv /usr/local/spark-2.0.2/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-2.0.2/jars/slf4j-log4j12-1.7.16.jar.hide
+
 # Ports
-EXPOSE 6066 7077 8080 8081
+EXPOSE 6066 7077 8080 8081 10000 10004
 
 # Copy start script
 COPY start-spark /opt/util/bin/start-spark
