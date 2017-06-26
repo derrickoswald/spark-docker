@@ -14,7 +14,7 @@ ENV SPARK_HOME=/usr/local/spark-$SPARK_VERSION
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install \
     -yq --no-install-recommends  \
-      python python3 vim sqlite3 r-base p7zip \
+      python python3 vim sqlite3 r-base p7zip net-tools \
   && apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
