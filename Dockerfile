@@ -38,7 +38,7 @@ ENV PATH=$PATH:$SPARK_HOME/bin
 RUN mv /usr/local/spark-2.1.1/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-2.1.1/jars/slf4j-log4j12-1.7.16.jar.hide
 
 # Ports
-EXPOSE 6066 7077 8080 8081 10000 10004
+EXPOSE 6066 7077 8080 8081 10000
 
 # Copy start script
 COPY start-spark /opt/util/bin/start-spark
