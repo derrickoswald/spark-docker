@@ -2,7 +2,7 @@ FROM singularities/hadoop:2.7
 MAINTAINER Singularities
 
 # Version
-ENV SPARK_VERSION=2.1.1
+ENV SPARK_VERSION=2.2.0
 
 # set up TTY
 ENV TERM=xterm-256color
@@ -35,7 +35,7 @@ COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
 
 # Remove duplicate SLF4J bindings
-RUN mv /usr/local/spark-2.1.1/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-2.1.1/jars/slf4j-log4j12-1.7.16.jar.hide
+RUN mv /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar.hide
 
 # Ports
 EXPOSE 6066 7077 8080 8081 10000
