@@ -30,9 +30,22 @@ RUN mkdir -p "${SPARK_HOME}" \
   && curl -sSL http://mirror.switch.ch/$DOWNLOAD_PATH | \
     tar -xz -C $SPARK_HOME --strip-components 1 \
   && sed 's/log4j.rootCategory=INFO/log4j.rootCategory=WARN/g' $SPARK_HOME/conf/log4j.properties.template >$SPARK_HOME/conf/log4j.properties \
+  && echo '' >> $SPARK_HOME/conf/log4j.properties \
+  && echo '# quiet the apache logs' >> $SPARK_HOME/conf/log4j.properties \
+  && echo 'log4j.logger.org.apache=ERROR' >> $SPARK_HOME/conf/log4j.properties \
   && rm -rf $ARCHIVE
 COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
+
+# Install Cassandra
+RUN echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list
+RUN curl https://www.apache.org/dist/cassandra/KEYS | apt-key add -
+RUN apt-get update \
+  && apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA \
+  && DEBIAN_FRONTEND=noninteractive apt-get install \
+    -yq --no-install-recommends \
+       cassandra \
+  && apt-get clean
 
 # Remove duplicate SLF4J bindings
 RUN mv /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar.hide
@@ -53,10 +66,3 @@ RUN echo "export SPARK_HOME=$SPARK_HOME" >> /etc/bash.bashrc \
   && echo 'export PATH=$PATH:$SPARK_HOME/bin'>> /etc/bash.bashrc \
   && echo "alias ll='ls -alF'">> /etc/bash.bashrc
 
-# Add deprecated commands
-RUN echo '#!/usr/bin/env bash' > /usr/bin/master \
-  && echo 'start-spark master' >> /usr/bin/master \
-  && chmod +x /usr/bin/master \
-  && echo '#!/usr/bin/env bash' > /usr/bin/worker \
-  && echo 'start-spark worker $1' >> /usr/bin/worker \
-  && chmod +x /usr/bin/worker
