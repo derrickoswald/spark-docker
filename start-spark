@@ -18,6 +18,9 @@ fi
 sed -i "s|cluster_name: 'Test Cluster'|cluster_name: 'sandbox'|g" /etc/cassandra/cassandra.yaml
 sed -i "s|- seeds: \"127.0.0.1\"|- seeds: \"$seed\"|g" /etc/cassandra/cassandra.yaml
 sed -i "s|listen_address: localhost|listen_address: $me|g" /etc/cassandra/cassandra.yaml
+sed -i "s|rpc_address: localhost|rpc_address: $me|g" /etc/cassandra/cassandra.yaml
+# WTF? Cassandra: bigtime fail, http://thelastpickle.com/blog/2017/05/23/auto-bootstrapping-part1.html
+echo JVM_OPTS=\"\$JVM_OPTS -Dcassandra.consistent.rangemovement=false\" >> /etc/cassandra/cassandra-env.sh
 
 # start Cassandra
 service cassandra start 2>/dev/null

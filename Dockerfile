@@ -50,8 +50,10 @@ RUN apt-get update \
 # Remove duplicate SLF4J bindings
 RUN mv /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar.hide
 
-# Ports
+# Spark ports
 EXPOSE 6066 7077 8080 8081 10000
+# Cassandra ports
+EXPOSE 7000 7001 7199 9042 9160
 
 # Copy start script
 COPY start-spark /opt/util/bin/start-spark
