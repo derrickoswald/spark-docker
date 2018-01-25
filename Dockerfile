@@ -2,7 +2,7 @@ FROM singularities/hadoop:2.7
 MAINTAINER Singularities
 
 # Version
-ENV SPARK_VERSION=2.2.0
+ENV SPARK_VERSION=2.2.1
 
 # set up TTY
 ENV TERM=xterm-256color
@@ -48,12 +48,55 @@ RUN apt-get update \
   && apt-get clean
 
 # Remove duplicate SLF4J bindings
-RUN mv /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-2.2.0/jars/slf4j-log4j12-1.7.16.jar.hide
+RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar.hide
 
-# Spark ports
-EXPOSE 6066 7077 8080 8081 10000
+# Spark ports, see https://spark.apache.org/docs/latest/security.html#configuring-ports-for-network-security
+# Cluster Manager Web UI
+EXPOSE 4040
+# Standalone Master REST port (spark.master.rest.port)
+EXPOSE 6066
+# Driver to Standalone Master
+EXPOSE 7077
+# Standalone Master Web UI
+EXPOSE 8080
+# Standalone Worker Web UI
+EXPOSE 8081
+# Yarn Resource Manager
+EXPOSE 8088
+# Rstudio
+EXPOSE 8787
+# History Server
+EXPOSE 18080
+
+# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# DFS Namenode IPC
+EXPOSE 8020
+# DFS Datanode data transfer
+EXPOSE 50010
+# DFS Datanode IPC
+EXPOSE 50020
+# DFS Namenode Web UI
+EXPOSE 50070
+# DFS Datanode Web UI
+EXPOSE 50075
+# DFS Secondary Namenode Web UI
+EXPOSE 50090
+# DFS Backup Node data transfer
+EXPOSE 50100
+# DFS Backup Node Web UI
+EXPOSE 50105
+
 # Cassandra ports
-EXPOSE 7000 7001 7199 9042 9160
+# Cassandra storage_port
+EXPOSE 7000
+# Cassandra ssl_storage_port
+EXPOSE 7001
+# Cassandra JMX monitoring port
+# EXPOSE 7199
+# Cassandra native_transport_port
+EXPOSE 9042
+# Cassandra rpc_port
+EXPOSE 9160
 
 # Copy start script
 COPY start-spark /opt/util/bin/start-spark
