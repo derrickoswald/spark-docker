@@ -2,7 +2,7 @@ FROM singularities/hadoop:2.7
 MAINTAINER Singularities
 
 # Version
-ENV SPARK_VERSION=2.2.1
+ENV SPARK_VERSION=2.3.0
 
 # set up TTY
 ENV TERM=xterm-256color
@@ -41,14 +41,16 @@ ENV PATH=$PATH:$SPARK_HOME/bin
 RUN echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list
 RUN curl https://www.apache.org/dist/cassandra/KEYS | apt-key add -
 RUN apt-get update \
-  && apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA \
-  && DEBIAN_FRONTEND=noninteractive apt-get install \
-    -yq --no-install-recommends \
-       cassandra \
-  && apt-get clean
+  && apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends cassandra
+RUN apt-get clean
 
 # Remove duplicate SLF4J bindings
 RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar.hide
+
+# fix missing ps command
+RUN apt-get update \
+  && apt-get install -yq --reinstall procps
 
 # Spark ports, see https://spark.apache.org/docs/latest/security.html#configuring-ports-for-network-security
 # Cluster Manager Web UI
@@ -68,7 +70,7 @@ EXPOSE 8787
 # History Server
 EXPOSE 18080
 
-# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.4/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
 # DFS Namenode IPC
 EXPOSE 8020
 # DFS Datanode data transfer
