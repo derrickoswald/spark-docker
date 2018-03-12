@@ -50,7 +50,7 @@ RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/
 
 # fix missing ps command
 RUN apt-get update \
-  && apt-get install -yq --reinstall procps
+&& apt-get install -yq --reinstall procps
 
 # Spark ports, see https://spark.apache.org/docs/latest/security.html#configuring-ports-for-network-security
 # Cluster Manager Web UI
