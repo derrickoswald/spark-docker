@@ -19,9 +19,9 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Install GridLAB-D
-COPY gridlabd_3.2.0-2_amd64.deb /opt/util/gridlabd_3.2.0-2_amd64.deb
-RUN dpkg -i /opt/util/gridlabd_3.2.0-2_amd64.deb \
-  && rm /opt/util/gridlabd_3.2.0-2_amd64.deb
+COPY gridlabd_4.0.0-1_amd64.deb /opt/util/gridlabd_4.0.0-1_amd64.deb
+RUN dpkg --install /opt/util/gridlabd_4.0.0-1_amd64.deb \
+  && rm /opt/util/gridlabd_4.0.0-1_amd64.deb
 
 # Install Spark
 RUN mkdir -p "${SPARK_HOME}" \
@@ -44,6 +44,11 @@ RUN apt-get update \
   && apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends cassandra
 RUN apt-get clean
+RUN  sed --in-place 's/enable_user_defined_functions: false/enable_user_defined_functions: true/g' /etc/cassandra/cassandra.yaml \
+  && sed --in-place 's/enable_scripted_user_defined_functions: false/enable_scripted_user_defined_functions: true/g' /etc/cassandra/cassandra.yaml \
+  && sed --in-place 's/read_request_timeout_in_ms: 5000/read_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
+  && sed --in-place 's/range_request_timeout_in_ms: 10000/range_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
+  && sed --in-place 's/write_request_timeout_in_ms: 2000/write_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml
 
 # Remove duplicate SLF4J bindings
 RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar.hide
@@ -111,5 +116,8 @@ RUN ldconfig
 # Fix environment for other users
 RUN echo "export SPARK_HOME=$SPARK_HOME" >> /etc/bash.bashrc \
   && echo 'export PATH=$PATH:$SPARK_HOME/bin'>> /etc/bash.bashrc \
-  && echo "alias ll='ls -alF'">> /etc/bash.bashrc
+  && echo "alias ll='ls -alF --color=auto'">> /etc/bash.bashrc
+
+# Fix vim's stupid and really annoying "visual mode"
+RUN echo "set mouse-=a" > /root/.vimrc
 
