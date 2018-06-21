@@ -48,7 +48,10 @@ RUN  sed --in-place 's/enable_user_defined_functions: false/enable_user_defined_
   && sed --in-place 's/enable_scripted_user_defined_functions: false/enable_scripted_user_defined_functions: true/g' /etc/cassandra/cassandra.yaml \
   && sed --in-place 's/read_request_timeout_in_ms: 5000/read_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
   && sed --in-place 's/range_request_timeout_in_ms: 10000/range_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
-  && sed --in-place 's/write_request_timeout_in_ms: 2000/write_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml
+  && sed --in-place 's/write_request_timeout_in_ms: 2000/write_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
+  && sed --in-place 's/INFO/WARN/g' /etc/cassandra/logback.xml \
+  && sed --in-place 's/level="DEBUG"/level="WARN"/g' /etc/cassandra/logback.xml \
+  && sed --in-place 's/level="ERROR"/level="WARN"/g' /etc/cassandra/logback.xml
 
 # Remove duplicate SLF4J bindings
 RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar.hide
@@ -75,7 +78,7 @@ EXPOSE 8787
 # History Server
 EXPOSE 18080
 
-# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.4/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.5/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
 # DFS Namenode IPC
 EXPOSE 8020
 # DFS Datanode data transfer
