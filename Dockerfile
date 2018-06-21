@@ -46,6 +46,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install \
     -yq --no-install-recommends \
        cassandra \
   && apt-get clean \
+  && sed --in-place 's/INFO/WARN/g' /etc/cassandra/logback.xml \
+  && sed --in-place 's/level="DEBUG"/level="WARN"/g' /etc/cassandra/logback.xml \
+  && sed --in-place 's/level="ERROR"/level="WARN"/g' /etc/cassandra/logback.xml \
   && sed --in-place 's/enable_user_defined_functions: false/enable_user_defined_functions: true/g' /etc/cassandra/cassandra.yaml \
   && sed --in-place 's/enable_scripted_user_defined_functions: false/enable_scripted_user_defined_functions: true/g' /etc/cassandra/cassandra.yaml \
   && sed --in-place 's/read_request_timeout_in_ms: 5000/read_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
@@ -77,7 +80,7 @@ EXPOSE 8787
 # History Server
 EXPOSE 18080
 
-# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.4/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.5/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
 # DFS Namenode IPC
 EXPOSE 8020
 # DFS Datanode data transfer
