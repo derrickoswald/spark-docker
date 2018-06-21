@@ -2,7 +2,7 @@ FROM singularities/hadoop:2.7
 MAINTAINER Singularities
 
 # Version
-ENV SPARK_VERSION=2.3.0
+ENV SPARK_VERSION=2.2.1
 
 # set up TTY
 ENV TERM=xterm-256color
