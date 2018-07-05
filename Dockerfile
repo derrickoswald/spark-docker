@@ -14,7 +14,7 @@ ENV SPARK_HOME=/usr/local/spark-$SPARK_VERSION
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install \
     -yq --no-install-recommends  \
-      python python3 vim sqlite3 r-base p7zip net-tools \
+      python python3 vim sqlite3 r-base p7zip net-tools ftp \
   && apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -36,22 +36,6 @@ RUN mkdir -p "${SPARK_HOME}" \
   && rm -rf $ARCHIVE
 COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
-
-# Install Cassandra
-RUN echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list
-RUN curl https://www.apache.org/dist/cassandra/KEYS | apt-key add -
-RUN apt-get update \
-  && apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends cassandra
-RUN apt-get clean
-RUN  sed --in-place 's/enable_user_defined_functions: false/enable_user_defined_functions: true/g' /etc/cassandra/cassandra.yaml \
-  && sed --in-place 's/enable_scripted_user_defined_functions: false/enable_scripted_user_defined_functions: true/g' /etc/cassandra/cassandra.yaml \
-  && sed --in-place 's/read_request_timeout_in_ms: 5000/read_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
-  && sed --in-place 's/range_request_timeout_in_ms: 10000/range_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
-  && sed --in-place 's/write_request_timeout_in_ms: 2000/write_request_timeout_in_ms: 100000/g' /etc/cassandra/cassandra.yaml \
-  && sed --in-place 's/INFO/WARN/g' /etc/cassandra/logback.xml \
-  && sed --in-place 's/level="DEBUG"/level="WARN"/g' /etc/cassandra/logback.xml \
-  && sed --in-place 's/level="ERROR"/level="WARN"/g' /etc/cassandra/logback.xml
 
 # Remove duplicate SLF4J bindings
 RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar.hide
@@ -95,18 +79,6 @@ EXPOSE 50090
 EXPOSE 50100
 # DFS Backup Node Web UI
 EXPOSE 50105
-
-# Cassandra ports
-# Cassandra storage_port
-EXPOSE 7000
-# Cassandra ssl_storage_port
-EXPOSE 7001
-# Cassandra JMX monitoring port
-# EXPOSE 7199
-# Cassandra native_transport_port
-EXPOSE 9042
-# Cassandra rpc_port
-EXPOSE 9160
 
 # Copy start script
 COPY start-spark /opt/util/bin/start-spark

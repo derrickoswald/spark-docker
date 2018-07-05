@@ -5,26 +5,6 @@ if [[ -z "${HDFS_USER}" ]]; then
   export HDFS_USER=spark
 fi
 
-# configure Cassandra cluster
-me=$(hostname --ip-address)
-if [[ "${1}" = 'master' ]]; then
-  seed=$me
-elif [[ "${1}" = 'worker' ]]; then
-  seed=$(getent ahosts $2 | grep $2 | cut --delimiter " " --fields 1)
-else
-  echo "Invalid command '${1}'" >&2
-  exit 1
-fi
-sed -i "s|cluster_name: 'Test Cluster'|cluster_name: 'sandbox'|g" /etc/cassandra/cassandra.yaml
-sed -i "s|- seeds: \"127.0.0.1\"|- seeds: \"$seed\"|g" /etc/cassandra/cassandra.yaml
-sed -i "s|listen_address: localhost|listen_address: $me|g" /etc/cassandra/cassandra.yaml
-sed -i "s|rpc_address: localhost|rpc_address: $me|g" /etc/cassandra/cassandra.yaml
-# WTF? Cassandra: bigtime fail, http://thelastpickle.com/blog/2017/05/23/auto-bootstrapping-part1.html
-echo JVM_OPTS=\"\$JVM_OPTS -Dcassandra.consistent.rangemovement=false\" >> /etc/cassandra/cassandra-env.sh
-
-# start Cassandra
-service cassandra start 2>/dev/null
-
 if [[ "${1}" = 'master' ]]; then
   # Start Hadoop NameNode
   start-hadoop namenode daemon
