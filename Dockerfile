@@ -2,7 +2,7 @@ FROM singularities/hadoop:2.7
 MAINTAINER Singularities
 
 # Version
-ENV SPARK_VERSION=2.3.2
+ENV SPARK_VERSION=2.4.3
 
 # set up TTY
 ENV TERM=xterm-256color
@@ -24,16 +24,16 @@ RUN dpkg --install /opt/util/gridlabd_4.0.0-1_amd64.deb \
   && rm /opt/util/gridlabd_4.0.0-1_amd64.deb
 
 # Install Spark
-RUN mkdir -p "${SPARK_HOME}" \
+RUN mkdir --parents "${SPARK_HOME}" \
   && export ARCHIVE=spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
-  && export DOWNLOAD_PATH=mirror/apache/dist/spark/spark-$SPARK_VERSION/$ARCHIVE \
-  && curl -sSL http://mirror.switch.ch/$DOWNLOAD_PATH | \
-    tar -xz -C $SPARK_HOME --strip-components 1 \
+  && export DOWNLOAD_PATH=dist/spark/spark-$SPARK_VERSION/$ARCHIVE \
+  && curl --silent --show-error --location https://www-eu.apache.org/$DOWNLOAD_PATH | \
+    tar --extract --gzip --directory=$SPARK_HOME --strip-components 1 \
   && sed 's/log4j.rootCategory=INFO/log4j.rootCategory=WARN/g' $SPARK_HOME/conf/log4j.properties.template >$SPARK_HOME/conf/log4j.properties \
   && echo '' >> $SPARK_HOME/conf/log4j.properties \
   && echo '# quiet the apache logs' >> $SPARK_HOME/conf/log4j.properties \
   && echo 'log4j.logger.org.apache=ERROR' >> $SPARK_HOME/conf/log4j.properties \
-  && rm -rf $ARCHIVE
+  && rm --recursive --force $ARCHIVE
 COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
 
