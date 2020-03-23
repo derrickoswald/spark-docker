@@ -2,12 +2,6 @@
 
 An [Apache Spark](http://spark.apache.org/) container image. The image is meant to be used for creating an standalone cluster with multiple workers.
 
-- [`1.5` (Dockerfile)](https://github.com/SingularitiesCR/spark-docker/blob/1.5/Dockerfile)
-- [`1.6` (Dockerfile)](https://github.com/SingularitiesCR/spark-docker/blob/1.6/Dockerfile)
-- [`2.0` (Dockerfile)](https://github.com/SingularitiesCR/spark-docker/blob/2.0/Dockerfile)
-- [`2.1` (Dockerfile)](https://github.com/SingularitiesCR/spark-docker/blob/2.1/Dockerfile)
-- [`2.2` (Dockerfile)](https://github.com/SingularitiesCR/spark-docker/blob/2.2/Dockerfile)
-
 ## Custom commands
 
 This image contains a script named `start-spark` (included in the PATH). This script is used to initialize the master and the workers.
@@ -32,11 +26,6 @@ To start a worker run the following command:
 start-spark worker [MASTER]
 ```
 
-### Deprecated commands
-
-The commands `master` and `worker` from previous versions of the image are maintained for compatibility but should not be used.
-
-
 ## Creating a Cluster with Docker Compose
 
 The easiest way to create a standalone cluster with this image is by using [Docker Compose](https://docs.docker.com/compose). The following snippet can be used as a `docker-compose.yml` for a simple cluster:
@@ -46,16 +35,23 @@ version: "2"
 
 services:
   master:
-    image: singularities/spark
+    image: derrickoswald/spark-docker
     command: start-spark master
     hostname: master
     ports:
-      - "6066:6066"
-      - "7070:7070"
-      - "8080:8080"
-      - "50070:50070"
+      - "4040:4040" # Cluster Manager Web UI
+      - "6066:6066" # Standalone Master REST port (spark.master.rest.port)
+      - "7077:7077" # Driver to Standalone Master, as in master = spark://sandbox:7077
+      - "8020:8020" # DFS Namenode IPC, e.g. hdfs dfs -fs hdfs://sandbox:8020 -ls
+      - "8080:8080" # Standalone Master Web UI
+      - "8081:8081" # Standalone Worker Web UI
+      - "10000:10000" # Thriftserver JDBC port
+      - "10001:10001" # Thriftserver HTTP protocol JDBC port
+      - "50010:50010" # DFS Datanode data transfer
+      - "50070:50070" # DFS Namenode Web UI
+      - "50075:50075" # DFS Datanode Web UI
   worker:
-    image: singularities/spark
+    image: derrickoswald/spark-docker
     command: start-spark worker master
     environment:
       SPARK_WORKER_CORES: 1
@@ -66,7 +62,8 @@ services:
 
 ### Persistence
 
-The image has a volume mounted at `/opt/hdfs`. To maintain states between restarts, mount a volume at this location. This should be done for the master and the workers.
+The image has a volume mounted at `/opt/hdfs`. To maintain states between restarts, mount a volume at this location.
+This should be done for the master and the workers.
 
 ### Scaling
 
