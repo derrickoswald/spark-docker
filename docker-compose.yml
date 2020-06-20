@@ -1,0 +1,27 @@
+version: "2"
+
+services:
+  master:
+    image: derrickoswald/spark-docker
+    command: start-spark master
+    hostname: master
+    ports:
+      - "4040:4040" # Cluster Manager Web UI
+      - "6066:6066" # Standalone Master REST port (spark.master.rest.port)
+      - "7077:7077" # Driver to Standalone Master, as in master = spark://sandbox:7077
+      - "8020:8020" # DFS Namenode IPC, e.g. hdfs dfs -fs hdfs://sandbox:8020 -ls
+      - "8080:8080" # Standalone Master Web UI
+      - "8081:8081" # Standalone Worker Web UI
+      - "10000:10000" # Thriftserver JDBC port
+      - "10001:10001" # Thriftserver HTTP protocol JDBC port
+      - "50010:50010" # DFS Datanode data transfer
+      - "50070:50070" # DFS Namenode Web UI
+      - "50075:50075" # DFS Datanode Web UI
+  worker:
+    image: derrickoswald/spark-docker
+    command: start-spark worker master
+    environment:
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 2g
+    links:
+      - master

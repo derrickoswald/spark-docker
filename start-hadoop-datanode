@@ -14,8 +14,7 @@ while ! nc -z $1 50070; do
   sleep 2;
 done;
 # Start HDFS data node
-sed -i.bak "s|\[NAMENODE_HOST\]|${1}|g" $HADOOP_CONF_DIR/core-site.xml
-rm -f $HADOOP_CONF_DIR/core-site.xml.bak
+sed --in-place "s|\[NAMENODE_HOST\]|${1}|g" $HADOOP_CONF_DIR/core-site.xml
 hadoop-daemon.sh start datanode
 # Start daemon if specified
 if [[ "${2}" != 'daemon' ]]; then

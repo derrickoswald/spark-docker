@@ -1,10 +1,10 @@
-FROM openjdk:8-jre
+FROM openjdk:11-jre
 LABEL maintainer = "Derrick.Oswald@9code.ch"
 
 # Hadoop
 
 # Version
-ENV HADOOP_VERSION=2.7.6
+ENV HADOOP_VERSION=3.2.1
 
 # Set home
 ENV HADOOP_HOME=/usr/local/hadoop-$HADOOP_VERSION
@@ -34,19 +34,14 @@ ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop \
 # Copy and fix configuration files
 COPY /conf/*.xml $HADOOP_CONF_DIR/
 RUN sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/start-dfs.sh \
-  && sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/stop-dfs.sh
+  && sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/stop-dfs.sh \
+  && sed --in-place "s/# export JAVA_HOME=/export JAVA_HOME=\/usr\/local\/openjdk-11/g" $HADOOP_CONF_DIR/hadoop-env.sh
 
 # HDFS
 EXPOSE 8020 9000 14000 50010 50020 50070 50075 50090 50470 50475
 
 # MapReduce
 EXPOSE 10020 13562	19888
-
-# Copy start scripts
-COPY start-hadoop /opt/util/bin/start-hadoop
-COPY start-hadoop-namenode /opt/util/bin/start-hadoop-namenode
-COPY start-hadoop-datanode /opt/util/bin/start-hadoop-datanode
-ENV PATH=$PATH:/opt/util/bin
 
 # Fix environment for other users
 RUN echo "export HADOOP_HOME=$HADOOP_HOME" >> /etc/bash.bashrc \
@@ -55,7 +50,7 @@ RUN echo "export HADOOP_HOME=$HADOOP_HOME" >> /etc/bash.bashrc \
 # Spark
 
 # Version
-ENV SPARK_VERSION=2.4.5
+ENV SPARK_VERSION=3.0.0
 
 # set up TTY
 ENV TERM=xterm-256color
@@ -66,7 +61,7 @@ ENV SPARK_HOME=/usr/local/spark-$SPARK_VERSION
 # Install dependencies
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet --no-install-recommends \
-    python python3 vim sqlite3 r-base p7zip net-tools ftp libncurses5 libtinfo5 \
+    python python3 vim sqlite3 r-base p7zip net-tools ftp libncurses5 libtinfo5 ssh \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -77,7 +72,7 @@ RUN dpkg --install /opt/util/gridlabd_4.0.0-1_amd64.deb \
 
 # Install Spark
 RUN mkdir --parents "${SPARK_HOME}" \
-  && export ARCHIVE=spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
+  && export ARCHIVE=spark-$SPARK_VERSION-bin-hadoop3.2.tgz \
   && export DOWNLOAD_PATH=dist/spark/spark-$SPARK_VERSION/$ARCHIVE \
   && curl --silent --show-error --location https://www-eu.apache.org/$DOWNLOAD_PATH | \
     tar --extract --gzip --directory=$SPARK_HOME --strip-components 1 \
@@ -90,7 +85,7 @@ COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
 
 # Remove duplicate SLF4J bindings
-RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar.hide
+RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.30.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.30.jar.hide
 
 # fix missing ps command
 RUN apt-get update \
@@ -114,7 +109,7 @@ EXPOSE 8787
 # History Server
 EXPOSE 18080
 
-# Hadoop ports, see https://hadoop.apache.org/docs/r2.7.5/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# Hadoop ports, see https://hadoop.apache.org/docs/r3.2.1/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
 # DFS Namenode IPC
 EXPOSE 8020
 # DFS Datanode data transfer
@@ -132,8 +127,16 @@ EXPOSE 50100
 # DFS Backup Node Web UI
 EXPOSE 50105
 
-# Copy start script
+# Copy start scripts
+COPY start-hadoop /opt/util/bin/start-hadoop
+COPY start-hadoop-namenode /opt/util/bin/start-hadoop-namenode
+COPY start-hadoop-datanode /opt/util/bin/start-hadoop-datanode
 COPY start-spark /opt/util/bin/start-spark
+ENV PATH=$PATH:/opt/util/bin
+
+# Set up keys
+RUN cat /dev/zero | ssh-keygen -q -N ""
+RUN ln -s /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 
 # Fix Java native library path
 # avoid WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
@@ -142,9 +145,9 @@ RUN ldconfig
 
 # Fix environment for other users
 RUN echo "export SPARK_HOME=$SPARK_HOME" >> /etc/bash.bashrc \
-  && echo 'export PATH=$PATH:$SPARK_HOME/bin'>> /etc/bash.bashrc \
-  && echo "alias ll='ls -alF --color=auto'">> /etc/bash.bashrc
+  && echo "export JAVA_HOME=/usr/local/openjdk-11" >> /etc/bash.bashrc \
+  && echo "export PATH=$PATH:$SPARK_HOME/bin" >> /etc/bash.bashrc \
+  && echo "alias ll='ls -alF --color=auto'" >> /etc/bash.bashrc
 
 # Fix vim's stupid and really annoying "visual mode"
 RUN echo "set mouse-=a" > /root/.vimrc
-
