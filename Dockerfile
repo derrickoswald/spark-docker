@@ -37,8 +37,15 @@ RUN sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/st
   && sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/stop-dfs.sh \
   && sed --in-place "s/# export JAVA_HOME=/export JAVA_HOME=\/usr\/local\/openjdk-11/g" $HADOOP_CONF_DIR/hadoop-env.sh
 
-# HDFS
-EXPOSE 8020 9000 14000 50010 50020 50070 50075 50090 50470 50475
+# Hapdoop ports, see https://issues.apache.org/jira/browse/HDFS-9427
+# Namenode ports
+EXPOSE 9820 9870 9871
+
+# Secondary Namenode ports
+EXPOSE 9868 9869
+
+# Datanode ports
+EXPOSE 9864 9865 9866 9867
 
 # MapReduce
 EXPOSE 10020 13562	19888

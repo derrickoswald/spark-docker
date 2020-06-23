@@ -10,7 +10,7 @@ if [[ -z "${1}" ]]; then
   exit 1
 fi
 # Wait for the name node to be online
-while ! nc -z $1 50070; do
+while ! nc -z $1 9870; do
   sleep 2;
 done;
 # Start HDFS data node
