@@ -1,10 +1,10 @@
-FROM openjdk:11-jre
+FROM openjdk:8-jre
 LABEL maintainer = "Derrick.Oswald@9code.ch"
 
 # Hadoop
 
 # Version
-ENV HADOOP_VERSION=3.2.1
+ENV HADOOP_VERSION=2.9.2
 
 # Set home
 ENV HADOOP_HOME=/usr/local/hadoop-$HADOOP_VERSION
@@ -35,17 +35,10 @@ ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop \
 COPY /conf/*.xml $HADOOP_CONF_DIR/
 RUN sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/start-dfs.sh \
   && sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/stop-dfs.sh \
-  && sed --in-place "s/# export JAVA_HOME=/export JAVA_HOME=\/usr\/local\/openjdk-11/g" $HADOOP_CONF_DIR/hadoop-env.sh
+  && sed --in-place "s/# export JAVA_HOME=/export JAVA_HOME=\/usr\/local\/openjdk-8/g" $HADOOP_CONF_DIR/hadoop-env.sh
 
-# Hapdoop ports, see https://issues.apache.org/jira/browse/HDFS-9427
-# Namenode ports
-EXPOSE 9820 9870 9871
-
-# Secondary Namenode ports
-EXPOSE 9868 9869
-
-# Datanode ports
-EXPOSE 9864 9865 9866 9867
+# HDFS
+EXPOSE 8020 9000 14000 50010 50020 50070 50075 50090 50470 50475
 
 # MapReduce
 EXPOSE 10020 13562	19888
@@ -57,7 +50,7 @@ RUN echo "export HADOOP_HOME=$HADOOP_HOME" >> /etc/bash.bashrc \
 # Spark
 
 # Version
-ENV SPARK_VERSION=3.0.0
+ENV SPARK_VERSION=2.3.4
 
 # set up TTY
 ENV TERM=xterm-256color
@@ -79,9 +72,9 @@ RUN dpkg --install /opt/util/gridlabd_4.0.0-1_amd64.deb \
 
 # Install Spark
 RUN mkdir --parents "${SPARK_HOME}" \
-  && export ARCHIVE=spark-$SPARK_VERSION-bin-hadoop3.2.tgz \
+  && export ARCHIVE=spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
   && export DOWNLOAD_PATH=dist/spark/spark-$SPARK_VERSION/$ARCHIVE \
-  && curl --silent --show-error --location https://www-eu.apache.org/$DOWNLOAD_PATH | \
+  && curl --silent --show-error --location https://archive.apache.org/$DOWNLOAD_PATH | \
     tar --extract --gzip --directory=$SPARK_HOME --strip-components 1 \
   && sed 's/log4j.rootCategory=INFO/log4j.rootCategory=WARN/g' $SPARK_HOME/conf/log4j.properties.template >$SPARK_HOME/conf/log4j.properties \
   && echo '' >> $SPARK_HOME/conf/log4j.properties \
@@ -92,7 +85,7 @@ COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ENV PATH=$PATH:$SPARK_HOME/bin
 
 # Remove duplicate SLF4J bindings
-RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.30.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.30.jar.hide
+RUN mv /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar /usr/local/spark-$SPARK_VERSION/jars/slf4j-log4j12-1.7.16.jar.hide
 
 # fix missing ps command
 RUN apt-get update \
@@ -152,7 +145,7 @@ RUN ldconfig
 
 # Fix environment for other users
 RUN echo "export SPARK_HOME=$SPARK_HOME" >> /etc/bash.bashrc \
-  && echo "export JAVA_HOME=/usr/local/openjdk-11" >> /etc/bash.bashrc \
+  && echo "export JAVA_HOME=/usr/local/openjdk-8" >> /etc/bash.bashrc \
   && echo "export PATH=$PATH:$SPARK_HOME/bin" >> /etc/bash.bashrc \
   && echo "alias ll='ls -alF --color=auto'" >> /etc/bash.bashrc
 
