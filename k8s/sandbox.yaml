@@ -1,0 +1,232 @@
+# Assumes node pools have been created as follows:
+#   name       #nodes   label
+#   masters      1      nodetype: master
+#   executors    N      nodetype: executor
+#
+# push Kubernetes configuration to the cluster with:
+# kubectl apply -f sandbox.yaml
+#
+# determine container names from cloud.google.com kubernetes panel, then access a shell inside the container with, e.g.:
+# kubectl exec --stdin --tty master-54758f858c-t5l6h -- /bin/bash
+# kubectl exec --stdin --tty worker-6c589bf664-fglkt -- /bin/bash
+#
+# execute:
+# spark-shell --master spark://sandbox:7077
+#
+# check number of executors with:
+# val rdd = sc.parallelize (Seq (1,2,3,4,5))
+# spark.sparkContext.getExecutorMemoryStatus
+#
+# remove Kubernetes configuration with:
+# kubectl delete -f sandbox.yaml
+#
+# For reference regarding this file syntax, see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cimapplication-config
+  labels:
+    app: cimapplication
+data:
+  hdfs_user: derrick_oswald # adjust as required
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cimapplication
+    component: master
+  name: sandbox
+spec:
+  clusterIP: None
+  selector:
+    app: cimapplication
+    component: master
+  ports:
+    # Spark ports, see https://spark.apache.org/docs/latest/security.html#configuring-ports-for-network-security
+    - name: "4040" # Cluster Manager Web UI
+      port: 4040
+    - name: "6066" # Standalone Master REST port (spark.master.rest.port)
+      port: 6066
+    - name: "7077" # Driver to Standalone Master
+      port: 7077
+    - name: "8080" # Standalone Master Web UI
+      port: 8080
+    - name: "8081" # Standalone Worker Web UI
+      port: 8081
+    - name: "8088" # Yarn Resource Manager
+      port: 8088
+    - name: "8787" # Rstudio
+      port: 8787
+    - name: "18080" # History Server
+      port: 18080
+    # Hadoop ports, see https://hadoop.apache.org/docs/r3.2.1/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+    - name: "8020" # DFS Namenode IPC
+      port: 8020
+    - name: "50010" # DFS Datanode data transfer
+      port: 50010
+    - name: "50020" # DFS Datanode IPC
+      port: 50020
+    - name: "50070" # DFS Namenode Web UI
+      port: 50070
+    - name: "50075" # DFS Datanode Web UI
+      port: 50075
+    - name: "50090" # DFS Secondary Namenode Web UI
+      port: 50090
+    - name: "50100" # DFS Backup Node data transfer
+      port: 50100
+    - name: "50105" # DFS Backup Node Web UI
+      port: 50105
+    # Hapdoop ports 3.0.0, see https://issues.apache.org/jira/browse/HDFS-9427
+    - name: "9820" # Namenode port
+      port: 9820
+    - name: "9870" # Namenode port
+      port: 9870
+    - name: "9871" # Namenode port
+      port: 9871
+    - name: "9868" # Secondary Namenode port
+      port: 9868
+    - name: "9869" # Secondary Namenode port
+      port: 9869
+    - name: "9864" # Datanode port
+      port: 9864
+    - name: "9865" # Datanode port
+      port: 9865
+    - name: "9866" # Datanode port
+      port: 9866
+    - name: "9867" # Datanode port
+      port: 9867
+    # Mapreduce ports, see https://hadoop.apache.org/docs/current/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml
+    - name: "10020" # mapreduce.jobhistory.address
+      port: 10020
+    - name: "13562" # mapreduce.shuffle.port
+      port: 13562
+    - name: "19888" # mapreduce.jobhistory.webapp.address
+      port: 19888
+    - name: "19890" # mapreduce.jobhistory.webapp.https.address
+      port: 19890
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sandbox
+  labels:
+    app: cimapplication
+    component: master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cimapplication
+      component: master
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: cimapplication
+        component: master
+    spec:
+      hostname: sandbox
+      nodeSelector:
+        nodetype: master
+      restartPolicy: Always
+      containers:
+      - name: master
+        args:
+        - start-spark
+        - master
+        env:
+        - name: HDFS_USER
+          valueFrom:
+            configMapKeyRef:
+              name: cimapplication-config
+              key: hdfs_user
+        image: derrickoswald/spark-docker:latest
+        ports:
+          # Spark ports, see https://spark.apache.org/docs/latest/security.html#configuring-ports-for-network-security
+        - containerPort: 4040 # Cluster Manager Web UI
+        - containerPort: 6066 # Standalone Master REST port (spark.master.rest.port)
+        - containerPort: 7077 # Driver to Standalone Master
+        - containerPort: 8080 # Standalone Master Web UI
+        - containerPort: 8081 # Standalone Worker Web UI
+        - containerPort: 8088 # Yarn Resource Manager
+        - containerPort: 8787 # Rstudio
+        - containerPort: 18080 # History Server
+          # Hadoop ports, see https://hadoop.apache.org/docs/r3.2.1/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+        - containerPort: 8020 # DFS Namenode IPC
+        - containerPort: 50010 # DFS Datanode data transfer
+        - containerPort: 50020 # DFS Datanode IPC
+        - containerPort: 50070 # DFS Namenode Web UI
+        - containerPort: 50075 # DFS Datanode Web UI
+        - containerPort: 50090 # DFS Secondary Namenode Web UI
+          # Hapdoop ports 3.0.0, see http://hadoop.apache.org/docs/r3.0.0/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+        - containerPort: 2049 # nfs.server.port
+        - containerPort: 4242 # nfs.mountd.port
+        - containerPort: 8111 # dfs.federation.router.admin-address
+        - containerPort: 8485 # dfs.journalnode.rpc-address
+        - containerPort: 8480 # dfs.journalnode.http-address
+        - containerPort: 8481 # dfs.journalnode.https-address
+        - containerPort: 8888 # dfs.federation.router.rpc-address
+        - containerPort: 9820 # dfs.namenode.rpc-address
+        - containerPort: 9870 # dfs.namenode.http-address
+        - containerPort: 9871 # dfs.namenode.https-address
+        - containerPort: 9864 # dfs.datanode.http.address
+        - containerPort: 9865 # dfs.datanode.https.address
+        - containerPort: 9866 # dfs.datanode.address
+        - containerPort: 9867 # dfs.datanode.ipc.address
+        - containerPort: 9868 # dfs.namenode.secondary.http-address
+        - containerPort: 9869 # dfs.namenode.secondary.https-address
+        - containerPort: 50071 # dfs.federation.router.http-address
+        - containerPort: 50072 # dfs.federation.router.https-address
+        - containerPort: 50100 # dfs.namenode.backup.address
+        - containerPort: 50105 # dfs.namenode.backup.http-address
+        - containerPort: 50475 # datanode.https.port
+          # Mapreduce ports, see https://hadoop.apache.org/docs/current/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml
+        - containerPort: 10020 # mapreduce.jobhistory.address
+        - containerPort: 13562 # mapreduce.shuffle.port
+        - containerPort: 19888 # mapreduce.jobhistory.webapp.address
+        - containerPort: 19890 # mapreduce.jobhistory.webapp.https.address
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app: cimapplication
+    component: executor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cimapplication
+      component: executor
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: cimapplication
+        component: executor
+    spec:
+      nodeSelector:
+        nodetype: executor
+      restartPolicy: Always
+      containers:
+      - name: worker
+        args:
+        - start-spark
+        - worker
+        - sandbox
+        env:
+        - name: HDFS_USER
+          valueFrom:
+            configMapKeyRef:
+              name: cimapplication-config
+              key: hdfs_user
+        - name: SPARK_WORKER_CORES
+          value: "1"
+        - name: SPARK_WORKER_MEMORY
+          value: 4g
+        image: derrickoswald/spark-docker:latest

@@ -37,18 +37,59 @@ RUN sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/st
   && sed --in-place "s/hadoop-daemons.sh/hadoop-daemon.sh/g" $HADOOP_HOME/sbin/stop-dfs.sh \
   && sed --in-place "s/# export JAVA_HOME=/export JAVA_HOME=\/usr\/local\/openjdk-11/g" $HADOOP_CONF_DIR/hadoop-env.sh
 
-# Hapdoop ports, see https://issues.apache.org/jira/browse/HDFS-9427
-# Namenode ports
-EXPOSE 9820 9870 9871
+# Hapdoop ports 3.0.0, see http://hadoop.apache.org/docs/r3.0.0/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# nfs.server.port
+EXPOSE 2049
+# nfs.mountd.port
+EXPOSE 4242
+# dfs.federation.router.admin-address
+EXPOSE 8111
+# dfs.journalnode.rpc-address
+EXPOSE 8485
+# dfs.journalnode.http-address
+EXPOSE 8480
+# dfs.journalnode.https-address
+EXPOSE 8481
+# dfs.federation.router.rpc-address
+EXPOSE 8888
+# dfs.namenode.rpc-address
+EXPOSE 9820
+# dfs.namenode.http-address
+EXPOSE 9870
+# dfs.namenode.https-address
+EXPOSE 9871
+# dfs.datanode.http.address
+EXPOSE 9864
+# dfs.datanode.https.address
+EXPOSE 9865
+# dfs.datanode.address
+EXPOSE 9866
+# dfs.datanode.ipc.address
+EXPOSE 9867
+# dfs.namenode.secondary.http-address
+EXPOSE 9868
+# dfs.namenode.secondary.https-address
+EXPOSE 9869
+# dfs.federation.router.http-address
+EXPOSE 50071
+# dfs.federation.router.https-address
+EXPOSE 50072
+# dfs.namenode.backup.address
+EXPOSE 50100
+# dfs.namenode.backup.http-address
+EXPOSE 50105
+# datanode.https.port
+EXPOSE 50475
 
-# Secondary Namenode ports
-EXPOSE 9868 9869
-
-# Datanode ports
-EXPOSE 9864 9865 9866 9867
-
-# MapReduce
-EXPOSE 10020 13562	19888
+# Mapreduce ports, see https://hadoop.apache.org/docs/current/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml
+# mapreduce.jobhistory.address
+EXPOSE 10020
+# mapreduce.shuffle.port
+EXPOSE 13562
+# mapreduce.jobhistory.webapp.address
+EXPOSE 19888
+# mapreduce.jobhistory.webapp.https.address
+EXPOSE 19890
 
 # Fix environment for other users
 RUN echo "export HADOOP_HOME=$HADOOP_HOME" >> /etc/bash.bashrc \
@@ -116,7 +157,8 @@ EXPOSE 8787
 # History Server
 EXPOSE 18080
 
-# Hadoop ports, see https://hadoop.apache.org/docs/r3.2.1/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# Hadoop ports 2.x, see https://hadoop.apache.org/docs/r2.7.6/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+# ToDo: are these still needed?
 # DFS Namenode IPC
 EXPOSE 8020
 # DFS Datanode data transfer
