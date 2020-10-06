@@ -98,7 +98,7 @@ RUN echo "export HADOOP_HOME=$HADOOP_HOME" >> /etc/bash.bashrc \
 # Spark
 
 # Version
-ENV SPARK_VERSION=3.0.0
+ENV SPARK_VERSION=3.0.1
 
 # set up TTY
 ENV TERM=xterm-256color
